@@ -26,3 +26,18 @@ Of course I'll not be as good as the examples in the book in terms of avoiding d
 If I can abide by those 3 rules and successfully implement concepts from POODR along the way, it's a success and a step forward in my programming
 
 Fleshed out the UI today. Will read more POODR and implement where I can.
+
+___
+25th July
+
+I haven't been doing nothing!
+
+I've been reading POODR and implementing lessons learned from that to the test code as well as I can for now, and I've been looking up how to make UMLs.
+
+The test code is coming along nicely. So far no methods longer than 10 lines, I have established an implied game loop through the use of methods calling each other appropriately, when the user presses a key it instantly responds instead of having to 'enter' via the use of require 'io/console'. Small steps forward, both in learning techniques and writing cleaner code.
+
+When the game is playable without the save/load functions, I'll call that version one. I'll have the connections and wiring in place though, so if someone chooses a save or load screen I will say it is 'under construction' and give them the option to quit or go back to the game screen for now.
+
+One 'must do' when this is finished is to compare the code to my highlighted notes in POODR.
+
+
