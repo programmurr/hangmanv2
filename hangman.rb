@@ -1,11 +1,10 @@
 # frozen_string_literal: true
 
 require 'io/console'
-require 'pry'
+require 'yaml'
 
 class WordGenerator
-  attr_reader :secret_word
-  attr_accessor :blank_word
+  attr_accessor :blank_word, :secret_word
 
   def initialize
     loop do
@@ -20,19 +19,19 @@ class WordGenerator
 end
 
 class Player
-  attr_accessor :guesses_remaining
+  attr_accessor :guesses_remaining, :incorrect_letters
   def initialize
     @guesses_remaining = 6
+    @incorrect_letters = String.new('')
   end
 end
 
 class Display
-  attr_accessor :player, :word_generator, :incorrect_letters
+  attr_accessor :player, :word_generator
 
-  def initialize(player, word_generator, incorrect_letters)
+  def initialize(player, word_generator)
     @player = player
     @word_generator = word_generator
-    @incorrect_letters = incorrect_letters
     welcome_screen
   end
 
@@ -42,24 +41,12 @@ class Display
     puts "\nPress 1 to start a new game, or 2 to load a saved game"
   end
 
-  def load_screen
-    system 'clear'
-    puts 'LOAD SCREEN UNDER CONSTRUCTION'
-    puts 'Press 1 to start a game, or any key to exit'
-  end
-
   def game_screen
     system 'clear'
     puts "\n#{word_generator.blank_word}"
     puts "\n#{player.guesses_remaining} guesses left!"
-    puts "\nIncorrect letters: #{incorrect_letters}"
+    puts "\nIncorrect letters: #{player.incorrect_letters}"
     puts "\nPress the letter you want to guess, or press 1 to save your game."
-  end
-
-  def save_screen
-    system 'clear'
-    puts 'SAVE SCREEN UNDER CONSTRUCTION'
-    puts 'Press 1 to return to the game, or any key to exit'
   end
 
   def win_message
@@ -78,6 +65,32 @@ class Display
     puts "\nBetter luck next time!"
     sleep 2
   end
+
+  def game_save_message
+    system 'clear'
+    game_screen
+    puts "\nGame saved! Press 1 to continue game, or any key to exit"
+  end
+end
+
+module SaveLoad
+  def save_game
+    obj = {
+      guesses_remaining: player.guesses_remaining,
+      blank_word: word_generator.blank_word,
+      secret_word: word_generator.secret_word,
+      incorrect_letters: player.incorrect_letters
+    }
+    File.open('game.yaml', 'w') { |file| file.write(YAML.dump(obj)) }
+  end
+
+  def load_game
+    loaded_game = YAML.safe_load(File.read('game.yaml'), [Symbol])
+    player.guesses_remaining = loaded_game[:guesses_remaining]
+    word_generator.blank_word = loaded_game[:blank_word]
+    player.incorrect_letters = loaded_game[:incorrect_letters]
+    word_generator.secret_word = loaded_game[:secret_word]
+  end
 end
 
 module Logic
@@ -88,6 +101,7 @@ module Logic
       gameplay
     elsif choice == '2'
       load_game
+      gameplay
     end
   end
 
@@ -97,6 +111,8 @@ module Logic
       letter_check(choice)
     elsif choice == '1'
       save_game
+      user_interface.game_save_message
+      save_screen_choice
     else
       puts 'Enter a letter only'
       sleep 3
@@ -118,7 +134,7 @@ module Logic
   end
 
   def add_to_incorrect_letters(choice)
-    incorrect_letters << choice
+    player.incorrect_letters << choice
   end
 
   def letter_check(choice)
@@ -136,16 +152,7 @@ module Logic
     if choice == '1'
       gameplay
     else
-      puts 'END'
-    end
-  end
-
-  def load_screen_choice
-    choice = user_input
-    if choice == '1'
-      gameplay
-    else
-      puts 'END'
+      puts "\nBye!"
     end
   end
 
@@ -168,14 +175,14 @@ end
 
 class Game
   include Logic
-  attr_accessor :player, :word_generator, :user_interface, :incorrect_letters
+  include SaveLoad
+  attr_accessor :player, :word_generator, :user_interface
 
   def initialize(player:, word_generator:)
     @player = player
     @word_generator = word_generator
-    @incorrect_letters = String.new('')
     word_generator.convert_to_blank_string
-    @user_interface = Display.new(player, word_generator, incorrect_letters)
+    @user_interface = Display.new(player, word_generator)
     launch_game
   end
 
@@ -192,16 +199,6 @@ class Game
       user_interface.game_screen
       game_screen_choice
     end
-  end
-
-  def load_game
-    user_interface.load_screen
-    load_screen_choice
-  end
-
-  def save_game
-    user_interface.save_screen
-    save_screen_choice
   end
 
   def user_input
