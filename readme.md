@@ -40,4 +40,13 @@ When the game is playable without the save/load functions, I'll call that versio
 
 One 'must do' when this is finished is to compare the code to my highlighted notes in POODR.
 
+___
+26th July
+
+EXCELLENT progress today!
+
+- v1 complete: a working standalone game. No save or load functions working, but you can play a single functioning game of hangman
+- v2 in progress: save function working and operational, load screen can list the saved files. Just need to implement where the user presses the number of the file they want to load. Find a way to use an array to select the saved file somehow. Also need to display a little hang man. Not much. Just simple. To satisfy the hardcore hangman fanbase
+
+
 
