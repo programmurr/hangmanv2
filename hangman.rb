@@ -49,10 +49,17 @@ class Display
     puts "\nPress the letter you want to guess, or press 1 to save your game."
   end
 
+  def load_screen
+    system 'clear'
+    puts 'Press the number of the file you want to load'
+    Dir.chdir('save_files') { puts Dir.glob('*.yaml').sort }
+  end
+
   def win_message
     system 'clear'
     game_screen
     puts "\nYOU WON! YOU'RE THE BEST HANGMAN PLAYER OF ALL TIME!"
+    sleep 2
   end
 
   def loss_message
@@ -75,21 +82,27 @@ end
 
 module SaveLoad
   def save_game
-    obj = {
+    save_object = {
       guesses_remaining: player.guesses_remaining,
       blank_word: word_generator.blank_word,
       secret_word: word_generator.secret_word,
       incorrect_letters: player.incorrect_letters
     }
-    File.open('game.yaml', 'w') { |file| file.write(YAML.dump(obj)) }
+    File.open("save_files/#{file_name}.yaml", 'w') { |file| file.write(YAML.dump(save_object)) }
   end
 
-  def load_game
-    loaded_game = YAML.safe_load(File.read('game.yaml'), [Symbol])
+  def load_game(choice)
+    file_to_load = Dir.chdir('save_files') { Dir.glob('*.yaml').sort[choice] }
+    loaded_game = YAML.safe_load(File.read("save_files/#{file_to_load}"), [Symbol])
     player.guesses_remaining = loaded_game[:guesses_remaining]
     word_generator.blank_word = loaded_game[:blank_word]
     player.incorrect_letters = loaded_game[:incorrect_letters]
     word_generator.secret_word = loaded_game[:secret_word]
+  rescue Errno::EISDIR
+    puts "That file doesn't exist, please choose again"
+    sleep 3
+    user_interface.load_screen
+    load_screen_choice
   end
 end
 
@@ -100,8 +113,8 @@ module Logic
       puts 'Going to game'
       gameplay
     elsif choice == '2'
-      load_game
-      gameplay
+      user_interface.load_screen
+      load_screen_choice
     end
   end
 
@@ -123,7 +136,7 @@ module Logic
   def replace_blank_space(choice)
     split_blank = word_generator.blank_word.split
     split_secret = word_generator.secret_word.split('')
-    split_secret.each.with_index do |_char, index|
+    split_secret.each_index do |index|
       split_blank[index] = choice if split_secret[index] == choice
     end
     word_generator.blank_word = split_blank.join(' ')
@@ -156,6 +169,20 @@ module Logic
     end
   end
 
+  def load_screen_choice
+    loop do
+      choice = user_input
+      if choice =~ /\d/
+        load_game(choice.to_i)
+        gameplay
+      else
+        puts 'Please enter a number'
+        sleep 3
+        user_interface.load_screen
+      end
+    end
+  end
+
   def win_check?
     if word_generator.blank_word.split == word_generator.secret_word.split('') && player.guesses_remaining.positive?
       true
@@ -176,13 +203,14 @@ end
 class Game
   include Logic
   include SaveLoad
-  attr_accessor :player, :word_generator, :user_interface
+  attr_accessor :player, :word_generator, :user_interface, :file_name
 
   def initialize(player:, word_generator:)
     @player = player
     @word_generator = word_generator
     word_generator.convert_to_blank_string
     @user_interface = Display.new(player, word_generator)
+    @file_name = create_unique_file_name
     launch_game
   end
 
@@ -191,14 +219,29 @@ class Game
   end
 
   def gameplay
-    if win_check? == true
+    if win_check?
       user_interface.win_message
-    elsif loss_check? == true
+      exit
+    elsif loss_check?
       user_interface.loss_message
+      exit
     else
       user_interface.game_screen
       game_screen_choice
     end
+  end
+
+  def finish_game; end
+
+  def create_unique_file_name
+    Dir.mkdir('save_files')
+    count = Dir.glob('save_files/*.yaml').length
+    date_and_time = Time.new
+    "#{count} - Hangman: #{date_and_time.strftime('%d-%m-%Y %I:%M %p')}"
+  rescue Errno::EEXIST
+    count = Dir.glob('save_files/*.yaml').length
+    date_and_time = Time.new
+    "#{count} - Hangman: #{date_and_time.strftime('%d-%m-%Y %I:%M %p')}"
   end
 
   def user_input

@@ -48,5 +48,14 @@ EXCELLENT progress today!
 - v1 complete: a working standalone game. No save or load functions working, but you can play a single functioning game of hangman
 - v2 in progress: save function working and operational, load screen can list the saved files. Just need to implement where the user presses the number of the file they want to load. Find a way to use an array to select the saved file somehow. Also need to display a little hang man. Not much. Just simple. To satisfy the hardcore hangman fanbase
 
+___
+27th July
+
+Wahey!
+
+v2 is complete! Save and load functions now working very well, as are all rescues and logic checks.
+I could spend more time displaying the hangman but it's not a requirement, and I would just be putsing another graphic if @guesses_remaining = n.
+What I will do, however, is refactor my code according to what I've learned from POODR. There are 2 methods longer than 10 lines, plus I need to see how I can make the parts more independent. But overall happy with it!
+
 
 
